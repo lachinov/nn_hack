@@ -1,0 +1,39 @@
+{
+    "face_detection": {
+        "path": [
+            "intel/face-detection-0100/FP32/face-detection-0100.xml",
+            "intel/face-detection-0100/FP32/face-detection-0100.bin"
+        ],
+        "batch_size": 1,
+        "detection_threshold": 0.7
+    },
+    "person_detection": {
+        "path": [
+            "intel/pedestrian-detection-adas-0002/FP32/pedestrian-detection-adas-0002.xml",
+            "intel/pedestrian-detection-adas-0002/FP32/pedestrian-detection-adas-0002.bin"
+        ],
+        "batch_size": 1,
+        "detection_threshold": 0.7
+    },
+    "emotion_recognition": {
+        "path": [
+            "intel/emotions-recognition-retail-0003/FP32/emotions-recognition-retail-0003.xml",
+            "intel/emotions-recognition-retail-0003/FP32/emotions-recognition-retail-0003.bin"
+        ],
+        "batch_size": 1
+    },
+    "facial_landmarks": {
+        "path": [
+            "intel/facial-landmarks-35-adas-0002/FP32/facial-landmarks-35-adas-0002.xml",
+            "intel/facial-landmarks-35-adas-0002/FP32/facial-landmarks-35-adas-0002.bin"
+        ],
+        "batch_size": 1
+    },
+    "headpose_estimation": {
+        "path": [
+            "intel/head-pose-estimation-adas-0001/FP32/head-pose-estimation-adas-0001.xml",
+            "intel/head-pose-estimation-adas-0001/FP32/head-pose-estimation-adas-0001.bin"
+        ],
+        "batch_size": 1
+    }
+}
