@@ -6,8 +6,11 @@ import argparse
 import cv2
 import json
 import numpy as np
+import time
+import io
 
 import ImageProcessor
+import utils
 
 
 parser = argparse.ArgumentParser(description="Video Inference")
@@ -18,6 +21,18 @@ async def proctor_blocking(request):
 
     if processor is None:
         print('Using cached response')
+        frame = cv2.imread('image.jpg')
+        _, byte_frame = cv2.imencode('.jpg',frame)
+
+        # web.FileResponse()
+
+        mpwriter = aiohttp.MultipartWriter(subtype='mixed')
+        mpwriter.append_json({0: 'hello'}, {'name': 'response'})
+        mpwriter.append(byte_frame.tostring(),
+                        {'CONTENT-TYPE': 'image/jpeg',
+                         'name': 'detection'})
+
+        return web.Response(status=200, body=mpwriter)
 
         #respond here
 
@@ -35,10 +50,29 @@ async def proctor_blocking(request):
     nparr = np.frombuffer(imageb, np.uint8)
     image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
-    cv2.imwrite('image.jpg', image)
+    start = time.time()
+    package = {'image': image}
+    package = processor(package)
+    end = time.time()
+    inf_time = end - start
 
-    return web.Response(text='{} sized of {} successfully stored'
-                             ''.format(233, 3333))
+    print(1./inf_time, inf_time)
+
+    frame = utils.render_gui(package, inf_time)
+
+    _, byte_frame = cv2.imencode('.jpg',frame)
+
+    cv2.imwrite('image.jpg', frame)
+
+    #web.FileResponse()
+
+    mpwriter = aiohttp.MultipartWriter(subtype='mixed')
+    mpwriter.append_json({0:'hello'}, {'name' : 'response'})
+    mpwriter.append(byte_frame.tostring(),
+                    {'CONTENT-TYPE': 'image/jpeg',
+                     'name' : 'detection'})
+
+    return web.Response(status=200,body=mpwriter)
 
 async def proctor_nonblocking(request):
     name = request.match_info.get('name', "Anonymous")
@@ -55,6 +89,7 @@ if __name__ == '__main__':
         with open('model_config.json', 'r') as f:
             config = json.load(f)
         processor = ImageProcessor.FrameDetectionPipeline(opt.ov_path, config)
+        processor.initialize()
     except Exception as e:
         print('ERROR: Couldn\'t load image processor')
         print(e)
