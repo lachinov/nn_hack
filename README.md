@@ -13,7 +13,7 @@
 ## Докеры
 
 
-Запустить докер с вебсервисом, чтобы он ловил POST запросы снаружи на 5000 порт:
+Запустить докер с вебсервисом, чтобы он ловил POST запросы снаружи на 5000 порт (OpenVINO с моделями уже упакованы внутрь):
 
 ```bash
 docker run -it fenixfly/vinoserver -p 5000:8080
@@ -38,8 +38,7 @@ docker build -t fenixfly/vinodock -f dockers/openvino/Dockerfile dockers/openvin
 Запуск (на всякий случай)
 
 ```bash
-docker run -it fenixfly/vinoserver -p 5000:8080 bash
-python3 /app/api.py
+docker run -it fenixfly/vinodock bash
 ```
 
 ### Докер с вебсервисом - fenixfly/vinodock
@@ -47,7 +46,7 @@ python3 /app/api.py
 Сборка:
  
 ```bash
-docker build -t fenixfly/vinodock -f dockers/webserver/Dockerfile . 
+docker build -t fenixfly/vinoserver -f dockers/webserver/Dockerfile . 
 ```
 
 Запуск:
