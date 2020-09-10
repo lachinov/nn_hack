@@ -14,7 +14,7 @@ import utils
 
 
 parser = argparse.ArgumentParser(description="Video Inference")
-parser.add_argument("--ov_path", default="/", type=str, help="path to openvino models")
+parser.add_argument("--ov_path", default="./", type=str, help="path to openvino models")
 
 async def proctor_blocking(request):
     processor = request.app['processor']
