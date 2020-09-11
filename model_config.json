@@ -35,5 +35,19 @@
             "intel/head-pose-estimation-adas-0001/FP32/head-pose-estimation-adas-0001.bin"
         ],
         "batch_size": 1
+    },
+    "open_closed_eye": {
+        "path": [
+            "public/open-closed-eye-0001/FP32/open-closed-eye-0001.xml",
+            "public/open-closed-eye-0001/FP32/open-closed-eye-0001.bin"
+        ],
+        "batch_size": 1
+    },
+    "gaze_estimation": {
+        "path": [
+            "intel/gaze-estimation-adas-0002/FP32/gaze-estimation-adas-0002.xml",
+            "intel/gaze-estimation-adas-0002/FP32/gaze-estimation-adas-0002.bin"
+        ],
+        "batch_size": 1
     }
 }

@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 from openvino.inference_engine import IECore, IENetwork
 
-import Model
+from . import Model
 
 
 class LandmarksDetectionOV(Model.BaseModel):

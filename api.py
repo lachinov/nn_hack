@@ -10,7 +10,7 @@ import time
 import io
 
 import ImageProcessor
-import utils
+from models import utils
 
 
 parser = argparse.ArgumentParser(description="Video Inference")

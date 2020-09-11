@@ -2,7 +2,7 @@ import numpy as np
 
 import cv2
 
-import EmotionRecognitionOV
+from . import EmotionRecognitionOV
 
 def cut_box(image, box):
     fh, fw, fc = image.shape
@@ -79,8 +79,19 @@ def cut_eye(face, headpose, landmarks):
     leye = cut_box_absolute(face, lbox)
     reye = cut_box_absolute(face, rbox)
 
-    return leye, reye
+    return leye, lbox, lmiddle, reye, rbox, rmiddle, roll
 
+def rotate_gaze(gaze, roll):
+    sin = np.sin(roll*np.pi/180)
+    cos = np.cos(roll*np.pi/180)
+
+    x = gaze[0]*cos + gaze[1]*sin
+    y = -gaze[0]*sin + gaze[1]*cos
+
+    gaze[0] = x
+    gaze[1] = y
+
+    return gaze
 
 def filter_boxes(name, batch: dict, fw, fh) -> dict:
     new_boxes = []
@@ -125,11 +136,48 @@ def render_gui(package, inf_time):
 
             cv2.circle(frame, (x, y), radius=3, color=(0, 255, 0), thickness=-1)
 
-        #cv2.imshow('LEye', package['reyes'][idx])
+        c_open = (0,255,0)
+        c_closed = (0,0,255)
+
+        l_state = package['closed_eyes'][idx][0,0] > package['closed_eyes'][idx][0,1]
+        r_state = package['closed_eyes'][idx][1,0] > package['closed_eyes'][idx][1,1]
+
+        lc = c_open
+        rc = c_open
+        if l_state:
+            lc = c_closed
+
+        if r_state:
+            rc = c_closed
+
+        lbox = package['lbox'][idx]
+        rbox = package['rbox'][idx]
+        cv2.rectangle(frame, (xmin+lbox[0], ymin+lbox[1]), (xmin+lbox[2], ymin+lbox[3]), lc, 1)
+        cv2.rectangle(frame, (xmin + rbox[0], ymin + rbox[1]), (xmin + rbox[2], ymin + rbox[3]), rc, 1)
+
+
+
+        gaze = package['gaze'][idx]
+        eye_middle = package['eye_middle'][idx]
+        gaze[1] = -gaze[1]
+
+        gaze = 0.4*gaze*(xmax-xmin)
+
+        cv2.arrowedLine(frame, (int(xmin+eye_middle[0][0]), int(ymin+eye_middle[0][1])),
+                        (int(xmin+eye_middle[0][0]+gaze[0]), int(ymin+eye_middle[0][1]+gaze[1])),(255,0,0),2)
+        cv2.arrowedLine(frame, (int(xmin+eye_middle[1][0]), int(ymin+eye_middle[1][1])),
+                        (int(xmin+eye_middle[1][0]+gaze[0]), int(ymin+eye_middle[1][1]+gaze[1])),(255,0,0),2)
+
+
+        #eye = package['leyes'][idx].copy()
+        #print('eye state:',package['closed_eyes'][idx][0] < package['closed_eyes'][idx][1])
+        #cv2.putText(eye, str(package['closed_eyes'][idx]), (5, 10), cv2.FONT_HERSHEY_COMPLEX, 0.1, (0, 0, 255), 1)
+
+        #cv2.imshow('LEye', eye)
         #cv2.imshow('LEye', package['face'][idx])
         #if cv2.waitKey(1) & 0xFF == ord('q'):
         #    break
-        # cv2.waitKey(1)
+        #cv2.waitKey(1)
 
         yaw, pitch, roll = hp
 
@@ -155,12 +203,12 @@ def render_gui(package, inf_time):
         cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), (0, 125, 255), 3)
         cv2.putText(frame, emotion_text, (xmin, ymin), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 255), 2)
 
-    for idx, b in enumerate(package['person_detection_boxes']):
-        xmin = int(b[0] * fw)  # int(b[0] * fw / W)
-        ymin = int(b[1] * fh)
-        xmax = int(b[2] * fw)
-        ymax = int(b[3] * fh)
+    #for idx, b in enumerate(package['person_detection_boxes']):
+    #    xmin = int(b[0] * fw)  # int(b[0] * fw / W)
+    #    ymin = int(b[1] * fh)
+    #    xmax = int(b[2] * fw)
+    #    ymax = int(b[3] * fh)
 
-        cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), (0, 0, 255), 1)
+    #    cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), (0, 0, 255), 1)
 
     return frame

@@ -1,13 +1,14 @@
 from typing import *
 import numpy as np
-import cv2
 from openvino.inference_engine import IECore, IENetwork
+import cv2
 
-import Model
+from . import Model
 
+emotions_keys = ('neutral', 'happy', 'sad', 'surprise', 'anger')
 
-class HeadPoseEstimationOV(Model.BaseModel):
-    def __init__(self,name, xml_path, bin_path, batch_size, image_key):
+class EmotionRecognitionOV(Model.BaseModel):
+    def __init__(self,name,xml_path, bin_path, batch_size, image_key):
 
         self.name = name
         self.xml_path = xml_path
@@ -21,16 +22,16 @@ class HeadPoseEstimationOV(Model.BaseModel):
         self.FaceDetectionNetwork.batch_size = self._batch_size
         # Get Input Layer Information
         self.FaceDetectionInputLayer = next(iter(self.FaceDetectionNetwork.inputs))
-        print("Face Detection Input Layer: ", self.FaceDetectionInputLayer)
+        print("Emotion Recognition Input Layer: ", self.FaceDetectionInputLayer)
         # Get Output Layer Information
         self.FaceDetectionOutputLayer = next(iter(self.FaceDetectionNetwork.outputs))
-        print("Face Detection Output Layer: ", self.FaceDetectionOutputLayer)
+        print("Emotion Recognition Output Layer: ", self.FaceDetectionOutputLayer)
         # Get Input Shape of Model
         self.FaceDetectionInputShape = self.FaceDetectionNetwork.inputs[self.FaceDetectionInputLayer].shape
-        print("Face Detection Input Shape: ", self.FaceDetectionInputShape)
+        print("Emotion Recognition Input Shape: ", self.FaceDetectionInputShape)
         # Get Output Shape of Model
         self.FaceDetectionOutputShape = self.FaceDetectionNetwork.outputs[self.FaceDetectionOutputLayer].shape
-        print("Face Detection Output Shape: ", self.FaceDetectionOutputShape)
+        print("Emotion Recognition Output Shape: ", self.FaceDetectionOutputShape)
 
     def initialize(self):
         OpenVinoIE = IECore()
@@ -38,9 +39,6 @@ class HeadPoseEstimationOV(Model.BaseModel):
                                                                device_name='CPU')
     def infer_shape(self) -> Iterable[int]:
         return self.FaceDetectionInputShape
-
-    def batch_size(self) -> int:
-        return self._batch_size
 
     def preprocess(self, batch:dict) -> dict:
         assert (len(batch[self.image_key].shape)==3)
@@ -52,10 +50,12 @@ class HeadPoseEstimationOV(Model.BaseModel):
         batch[self.name + '_'+self.image_key] = resized
         return batch
 
+    def batch_size(self) -> int:
+        return self._batch_size
+
     def __call__(self, batch:dict) -> dict:
         image = batch[self.name + '_'+self.image_key]
-        results = self.FaceDetectionExecutable.infer(inputs={self.FaceDetectionInputLayer: image})
+        results = self.FaceDetectionExecutable.infer(inputs={self.FaceDetectionInputLayer: image})['prob_emotion']
 
-        batch[self.name+'_headpose'] = np.concatenate([results['angle_y_fc'],results['angle_p_fc'],results['angle_r_fc']],axis=1)
-
+        batch[self.name + '_emotions'] = results[:,:,0,0]
         return batch

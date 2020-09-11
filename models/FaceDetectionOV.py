@@ -1,18 +1,18 @@
 from typing import *
 import numpy as np
-from openvino.inference_engine import IECore, IENetwork
 import cv2
+from openvino.inference_engine import IECore, IENetwork
 
-import Model
+from . import Model
 
-emotions_keys = ('neutral', 'happy', 'sad', 'surprise', 'anger')
 
-class EmotionRecognitionOV(Model.BaseModel):
-    def __init__(self,name,xml_path, bin_path, batch_size, image_key):
+class SSD_OV(Model.BaseModel):
+    def __init__(self,name, xml_path, bin_path, batch_size, detection_threshold, image_key):
 
         self.name = name
         self.xml_path = xml_path
         self.bin_path = bin_path
+        self.detection_threshold = detection_threshold
         self._batch_size = batch_size
         self.image_key = image_key
 
@@ -22,16 +22,16 @@ class EmotionRecognitionOV(Model.BaseModel):
         self.FaceDetectionNetwork.batch_size = self._batch_size
         # Get Input Layer Information
         self.FaceDetectionInputLayer = next(iter(self.FaceDetectionNetwork.inputs))
-        print("Emotion Recognition Input Layer: ", self.FaceDetectionInputLayer)
+        print("Face Detection Input Layer: ", self.FaceDetectionInputLayer)
         # Get Output Layer Information
         self.FaceDetectionOutputLayer = next(iter(self.FaceDetectionNetwork.outputs))
-        print("Emotion Recognition Output Layer: ", self.FaceDetectionOutputLayer)
+        print("Face Detection Output Layer: ", self.FaceDetectionOutputLayer)
         # Get Input Shape of Model
         self.FaceDetectionInputShape = self.FaceDetectionNetwork.inputs[self.FaceDetectionInputLayer].shape
-        print("Emotion Recognition Input Shape: ", self.FaceDetectionInputShape)
+        print("Face Detection Input Shape: ", self.FaceDetectionInputShape)
         # Get Output Shape of Model
         self.FaceDetectionOutputShape = self.FaceDetectionNetwork.outputs[self.FaceDetectionOutputLayer].shape
-        print("Emotion Recognition Output Shape: ", self.FaceDetectionOutputShape)
+        print("Face Detection Output Shape: ", self.FaceDetectionOutputShape)
 
     def initialize(self):
         OpenVinoIE = IECore()
@@ -39,6 +39,9 @@ class EmotionRecognitionOV(Model.BaseModel):
                                                                device_name='CPU')
     def infer_shape(self) -> Iterable[int]:
         return self.FaceDetectionInputShape
+
+    def batch_size(self) -> int:
+        return self._batch_size
 
     def preprocess(self, batch:dict) -> dict:
         assert (len(batch[self.image_key].shape)==3)
@@ -50,12 +53,27 @@ class EmotionRecognitionOV(Model.BaseModel):
         batch[self.name + '_'+self.image_key] = resized
         return batch
 
-    def batch_size(self) -> int:
-        return self._batch_size
-
     def __call__(self, batch:dict) -> dict:
         image = batch[self.name + '_'+self.image_key]
-        results = self.FaceDetectionExecutable.infer(inputs={self.FaceDetectionInputLayer: image})['prob_emotion']
+        size = image.shape[0]
+        results = self.FaceDetectionExecutable.infer(inputs={self.FaceDetectionInputLayer: image})['detection_out']
 
-        batch[self.name + '_emotions'] = results[:,:,0,0]
+
+        index = results[0,0,:,2] > self.detection_threshold
+        results = results[0,0,index,:]
+
+        bboxes_list = []
+        scores_list = []
+        for i in range(size):
+            index = results[:,0] == i
+            image_results = results[index,:]
+
+            bboxes = image_results[:,3:]
+            conf = image_results[:,2]
+            bboxes_list.append(bboxes)
+            scores_list.append(conf)
+
+        batch[self.name+'_boxes'] = bboxes_list
+        batch[self.name+'_scores'] = scores_list
+
         return batch

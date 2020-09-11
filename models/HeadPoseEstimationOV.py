@@ -3,16 +3,15 @@ import numpy as np
 import cv2
 from openvino.inference_engine import IECore, IENetwork
 
-import Model
+from . import Model
 
 
-class SSD_OV(Model.BaseModel):
-    def __init__(self,name, xml_path, bin_path, batch_size, detection_threshold, image_key):
+class HeadPoseEstimationOV(Model.BaseModel):
+    def __init__(self,name, xml_path, bin_path, batch_size, image_key):
 
         self.name = name
         self.xml_path = xml_path
         self.bin_path = bin_path
-        self.detection_threshold = detection_threshold
         self._batch_size = batch_size
         self.image_key = image_key
 
@@ -55,25 +54,8 @@ class SSD_OV(Model.BaseModel):
 
     def __call__(self, batch:dict) -> dict:
         image = batch[self.name + '_'+self.image_key]
-        size = image.shape[0]
-        results = self.FaceDetectionExecutable.infer(inputs={self.FaceDetectionInputLayer: image})['detection_out']
+        results = self.FaceDetectionExecutable.infer(inputs={self.FaceDetectionInputLayer: image})
 
-
-        index = results[0,0,:,2] > self.detection_threshold
-        results = results[0,0,index,:]
-
-        bboxes_list = []
-        scores_list = []
-        for i in range(size):
-            index = results[:,0] == i
-            image_results = results[index,:]
-
-            bboxes = image_results[:,3:]
-            conf = image_results[:,2]
-            bboxes_list.append(bboxes)
-            scores_list.append(conf)
-
-        batch[self.name+'_boxes'] = bboxes_list
-        batch[self.name+'_scores'] = scores_list
+        batch[self.name+'_headpose'] = np.concatenate([results['angle_y_fc'],results['angle_p_fc'],results['angle_r_fc']],axis=1)
 
         return batch
