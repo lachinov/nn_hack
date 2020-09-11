@@ -33,10 +33,10 @@ def adjust_box(box, percent):
     w = (box[2]-box[0])
     h = (box[3]-box[1])
 
-    box[0] -= percent*w
-    box[1] -= 2*percent*h
+    box[0] -= 2*percent*w
+    box[1] -= 4*percent*h#*4
 
-    box[2] += percent*w
+    box[2] += 2*percent*w
     box[3] += percent*h
 
     return box
@@ -240,7 +240,8 @@ def render_gui(package, inf_time, ids, distances):
 
         cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), (0, 125, 255), 3)
 
-        text = emotion_text[:4]+ ' {} {:.2f}'.format(ids[idx][0],distances[idx][0])
+        #emotion_text[:4]+
+        text = '{} {:.2f}'.format(ids[idx][0],distances[idx][0])
         cv2.putText(frame, text, (xmin, ymin), cv2.FONT_HERSHEY_COMPLEX, 0.8, (0, 0, 255), 1)
 
     #for idx, b in enumerate(package['person_detection_boxes']):

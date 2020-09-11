@@ -53,7 +53,7 @@ class FaceReIDOV(Model.BaseModel):
     def preprocess(self, batch:dict) -> dict:
         assert (len(batch[self.image_key].shape)==3)
         face = batch[self.image_key]
-        '''
+
         h, w, c = batch[self.image_key].shape
 
         landmarks = np.array(batch['landmarks_detection_landmarks']).reshape((-1,2))
@@ -67,7 +67,7 @@ class FaceReIDOV(Model.BaseModel):
         points[4] = landmarks[9]
 
         face = utils.transform_face(face,landmarks=points, destination_landmarks=self.REFERENCE_LANDMARKS)
-        '''
+
         N, C, H, W = self.infer_shape()
         resized = cv2.resize(face, (W, H))
         resized = resized.transpose((2, 0, 1))
@@ -77,8 +77,9 @@ class FaceReIDOV(Model.BaseModel):
 
     def __call__(self, batch:dict) -> dict:
         image = batch[self.name + '_'+self.image_key]
+
         results = self.FaceDetectionExecutable.infer(inputs={self.FaceDetectionInputLayer: image})[self.FaceDetectionOutputLayer]
 
-        batch[self.name+'_embedding'] = results#[:,:,0,0]
+        batch[self.name+'_embedding'] = results.reshape((image.shape[0],-1))
 
         return batch

@@ -94,7 +94,7 @@ class FrameDetectionPipeline():
         batch = self.face_detection_model(batch)
         package = custom_collate.inverse_collate(batch, 0)
 
-        package['face_detection_boxes'] = utils.adjust_boxes(package['face_detection_boxes'], 0.08)
+        package['face_detection_boxes'] = utils.adjust_boxes(package['face_detection_boxes'], 0.05)
         package = utils.filter_boxes('face_detection', package, fw, fh)
         #package = utils.filter_boxes('person_detection', package, fw, fh)
 

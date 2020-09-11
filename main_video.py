@@ -27,10 +27,10 @@ if __name__ == '__main__':
     image_processor.initialize()
 
     faces_database = FacesDatabase.LocalFacesDatabase(path='/face/trusted_faces_storage', image_processor=image_processor)
-    #image = cv2.imread('../me2.jpg')
-    #faces_database.add('Dmitry1',image)
-    #image = cv2.imread('../me.png')
-    #faces_database.add('Dmitry2', image)
+    image = cv2.imread('../me2.jpg')
+    faces_database.add('Dmitry1',image)
+    image = cv2.imread('../me.png')
+    faces_database.add('Dmitry2', image)
 
     print('starting video')
 

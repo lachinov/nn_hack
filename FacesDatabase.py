@@ -29,7 +29,7 @@ class LocalFacesDatabase():
             if package['face_detection_boxes'].shape[0] > 1:
                 raise Exception('Detected more that one face')
 
-            self.database[id] = package['face_id']
+            self.database[id] = package['face_id'][0]
 
             os.makedirs(os.path.join(self.path,str(id)),exist_ok=True)
 
@@ -57,7 +57,13 @@ class LocalFacesDatabase():
         values = list(self.database.values())
         keys = list(self.database.keys())
 
-        distance = np.array([cosine(embedding,v) for v in values])
+        distance = []
+        for v in values:
+            c = cosine(embedding,v)
+            dot = np.dot(embedding.T, v)/(np.linalg.norm(embedding)*np.linalg.norm(v))
+
+            distance.append(dot)
+        distance = np.array(distance)
         sorted = np.argsort(distance)[::-1]
 
         s = sorted[:topk]
