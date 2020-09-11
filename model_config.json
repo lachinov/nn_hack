@@ -52,8 +52,8 @@
     },
     "face_reid": {
         "path": [
-            "public/face-recognition-mobilefacenet-arcface/FP32/face-recognition-mobilefacenet-arcface.xml",
-            "public/face-recognition-mobilefacenet-arcface/FP32/face-recognition-mobilefacenet-arcface.bin"
+            "intel/face-reidentification-retail-0095/FP32/face-reidentification-retail-0095.xml",
+            "intel/face-reidentification-retail-0095/FP32/face-reidentification-retail-0095.bin"
         ],
         "batch_size": 1
     }
