@@ -10,6 +10,7 @@ import time
 import io
 
 import ImageProcessor
+import FacesDatabase
 from models import utils
 
 
@@ -50,12 +51,20 @@ async def proctor_blocking(request):
     start = time.time()
     package = {'image': image}
     package = processor(package)
+
+    ids = []
+    distances = []
+    for embedding in package['face_id']:
+        i, d = faces_database.find(embedding, 5)
+        ids.append(i)
+        distances.append(d)
+
     end = time.time()
     inf_time = end - start
 
     print(1./inf_time, inf_time)
 
-    frame = utils.render_gui(package, inf_time)
+    frame = utils.render_gui(package, inf_time, ids, distances)
 
     _, byte_frame = cv2.imencode('.jpg',frame)
 
@@ -87,6 +96,7 @@ if __name__ == '__main__':
             config = json.load(f)
         processor = ImageProcessor.FrameDetectionPipeline(opt.ov_path, config)
         processor.initialize()
+        faces_database = FacesDatabase.LocalFacesDatabase(path='/face/trusted_faces_storage', image_processor=processor)
     except Exception as e:
         print('ERROR: Couldn\'t load image processor')
         print(e)

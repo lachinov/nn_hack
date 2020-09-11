@@ -10,6 +10,7 @@ import os
 
 
 import ImageProcessor
+import FacesDatabase
 from models import utils
 
 parser = argparse.ArgumentParser(description="Video Inference")
@@ -25,6 +26,12 @@ if __name__ == '__main__':
     image_processor = ImageProcessor.FrameDetectionPipeline(opt.ov_path,config)
     image_processor.initialize()
 
+    faces_database = FacesDatabase.LocalFacesDatabase(path='/face/trusted_faces_storage', image_processor=image_processor)
+    #image = cv2.imread('../me2.jpg')
+    #faces_database.add('Dmitry1',image)
+    #image = cv2.imread('../me.png')
+    #faces_database.add('Dmitry2', image)
+
     print('starting video')
 
     capture = cv2.VideoCapture(opt.video_path)
@@ -33,8 +40,8 @@ if __name__ == '__main__':
     cv2.namedWindow('Window', cv2.WINDOW_NORMAL)
     cv2.resizeWindow('Window', 800, 600)
 
-    #cv2.namedWindow('LEye', cv2.WINDOW_NORMAL)
-    #cv2.resizeWindow('LEye', 800, 600)
+    #cv2.namedWindow('reid_face', cv2.WINDOW_NORMAL)
+    #cv2.resizeWindow('reid_face', 800, 600)
 
     frame_no = 0
 
@@ -56,7 +63,15 @@ if __name__ == '__main__':
         end = time.time()
         inf_time = end - start
 
-        frame = utils.render_gui(package,inf_time)
+        ids = []
+        distances = []
+        for embedding in package['face_id']:
+            i, d = faces_database.find(embedding, 5)
+            ids.append(i)
+            distances.append(d)
+
+
+        frame = utils.render_gui(package,inf_time, ids, distances)
 
         cv2.imshow('Window', frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):

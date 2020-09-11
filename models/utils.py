@@ -34,7 +34,7 @@ def adjust_box(box, percent):
     h = (box[3]-box[1])
 
     box[0] -= percent*w
-    box[1] -= 4*percent*h
+    box[1] -= 2*percent*h
 
     box[2] += percent*w
     box[3] += percent*h
@@ -112,7 +112,42 @@ def filter_boxes(name, batch: dict, fw, fh) -> dict:
 
     return batch
 
-def render_gui(package, inf_time):
+# copied from re-id demo
+def normalize(array, axis):
+    mean = array.mean(axis=axis)
+    array -= mean
+    std = array.std()
+    array /= std
+    return mean, std
+
+def get_transform(src, dst):
+    assert np.array_equal(src.shape, dst.shape) and len(src.shape) == 2, \
+            "2d input arrays are expected, got %s" % (src.shape)
+    src_col_mean, src_col_std = normalize(src, axis=(0))
+    dst_col_mean, dst_col_std = normalize(dst, axis=(0))
+
+    u, _, vt = np.linalg.svd(np.matmul(src.T, dst))
+    r = np.matmul(u, vt).T
+
+    transform = np.empty((2, 3))
+    transform[:, 0:2] = r * (dst_col_std / src_col_std)
+    transform[:, 2] = dst_col_mean.T - \
+        np.matmul(transform[:, 0:2], src_col_mean.T)
+    return transform
+
+def transform_face(face, landmarks, destination_landmarks):
+    h, w, c = face.shape
+
+    size = np.array([[w,h]])
+    landmarks = landmarks.copy()*size
+    destination_landmarks = destination_landmarks.copy()*size
+    transform = get_transform(destination_landmarks, landmarks)
+
+    face = cv2.warpAffine(face, transform, (w,h), flags=cv2.WARP_INVERSE_MAP)
+    return face
+
+
+def render_gui(package, inf_time, ids, distances):
     fps = 1. / inf_time
     frame = package['image'].copy()
     fh, fw, fc = frame.shape
@@ -173,6 +208,9 @@ def render_gui(package, inf_time):
         #print('eye state:',package['closed_eyes'][idx][0] < package['closed_eyes'][idx][1])
         #cv2.putText(eye, str(package['closed_eyes'][idx]), (5, 10), cv2.FONT_HERSHEY_COMPLEX, 0.1, (0, 0, 255), 1)
 
+        #reid_face = package['reid_face'][idx]
+        #cv2.imshow('reid_face', reid_face.transpose((1,2,0)))
+
         #cv2.imshow('LEye', eye)
         #cv2.imshow('LEye', package['face'][idx])
         #if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -201,7 +239,9 @@ def render_gui(package, inf_time):
                  (x_center + int(axisLength * sinY * cosP), y_center + int(axisLength * sinP)), (255, 0, 255), 3)
 
         cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), (0, 125, 255), 3)
-        cv2.putText(frame, emotion_text, (xmin, ymin), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 255), 2)
+
+        text = emotion_text[:4]+ ' {} {:.2f}'.format(ids[idx][0],distances[idx][0])
+        cv2.putText(frame, text, (xmin, ymin), cv2.FONT_HERSHEY_COMPLEX, 0.8, (0, 0, 255), 1)
 
     #for idx, b in enumerate(package['person_detection_boxes']):
     #    xmin = int(b[0] * fw)  # int(b[0] * fw / W)

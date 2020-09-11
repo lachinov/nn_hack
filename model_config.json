@@ -49,5 +49,12 @@
             "intel/gaze-estimation-adas-0002/FP32/gaze-estimation-adas-0002.bin"
         ],
         "batch_size": 1
+    },
+    "face_reid": {
+        "path": [
+            "public/face-recognition-mobilefacenet-arcface/FP32/face-recognition-mobilefacenet-arcface.xml",
+            "public/face-recognition-mobilefacenet-arcface/FP32/face-recognition-mobilefacenet-arcface.bin"
+        ],
+        "batch_size": 1
     }
 }

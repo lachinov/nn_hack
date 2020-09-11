@@ -1,7 +1,7 @@
 import os
 import numpy as np
 
-from models import FaceDetectionOV, EmotionRecognitionOV, LandmarksDetectionOV, HeadPoseEstimationOV, OpenClosedEyeOV, GazeEstimationOV
+from models import FaceDetectionOV, EmotionRecognitionOV, LandmarksDetectionOV, HeadPoseEstimationOV, OpenClosedEyeOV, GazeEstimationOV, FaceReIDOV
 
 import custom_collate
 from models import utils
@@ -63,6 +63,14 @@ class FrameDetectionPipeline():
                                                                               config['gaze_estimation'][
                                                                                   'batch_size'], image_key='eyes')
 
+        self.face_reid_model = FaceReIDOV.FaceReIDOV('face_reid',
+                                                                              os.path.join(ov_path, config[
+                                                                                  'face_reid']['path'][0]),
+                                                                              os.path.join(ov_path, config[
+                                                                                  'face_reid']['path'][1]),
+                                                                              config['face_reid'][
+                                                                                  'batch_size'], image_key='face')
+
     def initialize(self):
         print('FrameDetectionPipeline: loading')
         self.emotion_recognition_model.initialize()
@@ -72,6 +80,7 @@ class FrameDetectionPipeline():
         self.headpose_estimation_model.initialize()
         self.open_closed_eye_model.initialize()
         self.gaze_estimation_model.initialize()
+        self.face_reid_model.initialize()
         print('FrameDetectionPipeline: finished loading')
 
 
@@ -85,7 +94,7 @@ class FrameDetectionPipeline():
         batch = self.face_detection_model(batch)
         package = custom_collate.inverse_collate(batch, 0)
 
-        package['face_detection_boxes'] = utils.adjust_boxes(package['face_detection_boxes'], 0.02)
+        package['face_detection_boxes'] = utils.adjust_boxes(package['face_detection_boxes'], 0.08)
         package = utils.filter_boxes('face_detection', package, fw, fh)
         #package = utils.filter_boxes('person_detection', package, fw, fh)
 
@@ -100,6 +109,8 @@ class FrameDetectionPipeline():
         closed_eyes = []
         gaze = []
         eye_middle = []
+        face_id = []
+        face_from_reid = []
 
         for idx, b in enumerate(package['face_detection_boxes']):
             package_face = {'face': utils.cut_box(package['image'], b)}
@@ -119,9 +130,11 @@ class FrameDetectionPipeline():
 
             package_face['eyes'] = (leye, reye)
             package_face['eye_middle'] = (lmiddle, rmiddle)
+            package_face = self.face_reid_model.preprocess(package_face)
             package_face = self.open_closed_eye_model.preprocess(package_face)
             package_face = self.gaze_estimation_model.preprocess(package_face)
             batch = custom_collate.default_collate([package_face])
+            batch = self.face_reid_model(batch)
             batch = self.open_closed_eye_model(batch)
             batch = self.gaze_estimation_model(batch)
             package_face = custom_collate.inverse_collate(batch, 0)
@@ -142,6 +155,8 @@ class FrameDetectionPipeline():
             closed_eyes.append(package_face['open_closed_eye_closed'])
             gaze.append(package_face['gaze_estimation_gaze'])
             eye_middle.append(package_face['eye_middle'])
+            face_id.append(package_face['face_reid_embedding'])
+            face_from_reid.append(package_face['face_reid_face'])
 
         package['emotions'] = emotions
         package['landmarks'] = landmarks
@@ -154,5 +169,7 @@ class FrameDetectionPipeline():
         package['closed_eyes'] = closed_eyes
         package['gaze'] = gaze
         package['eye_middle'] = eye_middle
+        package['face_id'] = face_id
+        package['face_reid_face'] = face_from_reid
 
         return package
