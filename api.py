@@ -19,22 +19,19 @@ parser.add_argument("--ov_path", default="./", type=str, help="path to openvino 
 async def proctor_blocking(request):
     processor = request.app['processor']
 
-    #if processor is None:
-    #    print('Using cached response')
-    #    frame = cv2.imread('image.jpg')
-    #    _, byte_frame = cv2.imencode('.jpg',frame)
+    if processor is None:
+        print('Using cached response')
+        frame = cv2.imread('image.jpg')
+        _, byte_frame = cv2.imencode('.jpg',frame)
 
-        # web.FileResponse()
+        mpwriter = aiohttp.MultipartWriter(subtype='mixed')
+        mpwriter.append_json({0: 'hello'}, {'name': 'response'})
+        mpwriter.append(byte_frame.tostring(),
+                       {'CONTENT-TYPE': 'image/jpeg',
+                         'name': 'detection'})
 
-    #    mpwriter = aiohttp.MultipartWriter(subtype='mixed')
-    #    mpwriter.append_json({0: 'hello'}, {'name': 'response'})
-    #    mpwriter.append(byte_frame.tostring(),
-    #                   {'CONTENT-TYPE': 'image/jpeg',
-    #                     'name': 'detection'})
+        return web.Response(status=200, body=mpwriter)
 
-    #    return web.Response(status=200, body=mpwriter)
-
-        #respond here
 
     reader = await request.multipart()
 
