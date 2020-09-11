@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Peer</title>
+</head>
+<body>
+<div id="app">
+    <h1>Учитель</h1>
+    <div id="my-video-div">
+        <video id=my-video muted="muted" width="100px" height="auto" ></video>
+    </div>
+    <h3>Мои ID</h3>
+    <ul>
+        <li v-for="comrade in comrades" :key="comrade.id">
+            ученик:{{comrade.id}} - {{comrade.myId}}
+            <video :id="comrade.htmlId" width="400px" height="auto" ></video>
+        </li>
+
+    </ul>
+    <input type="text" v-model="comradeId">
+    <a @click="addСomrade()">добавить собеседника</a>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://unpkg.com/peerjs@1.0.0/dist/peerjs.min.js"></script>
+<script>
+  class Сomrade{
+    id=null;
+    myId=null;
+    peer=null;
+    call=null;
+    htmlId=null;
+
+    constructor(id) {
+      this.htmlId = "comrade-video-"+id;
+      this.id = id;
+      this.peer = new Peer();
+      this.peer.on('open', (myId)=>{
+        this.myId = myId;
+        console.log(myId);
+      });
+
+    }
+
+    callСomrade(myVideo){ // вызываем
+      this.call = this.peer.call(this.id, myVideo); //звоним, указав peerId-партнера и передав свой mediaStream
+      this.call.on('stream', (stream)=>{ //нам ответили, получим стрим
+        setTimeout(()=>{
+          document.getElementById(this.htmlId).srcObject = this.call.remoteStream;
+          document.getElementById(this.htmlId).onloadedmetadata = (e)=>{
+            document.getElementById(this.htmlId).play();
+          };
+        },1500);
+      });
+    }
+  }
+
+  let app = new Vue({
+    el: '#app',
+    data: {
+      comrades: [],
+      comradeId: '',
+      myVideo: null,
+    },
+    methods: {
+      addСomrade(){
+        let comrade = new Сomrade( this.comradeId );
+        this.comrades.push(comrade);
+        this.comradeId = "";
+        comrade.callСomrade(this.myVideo);
+      },
+
+      connectMyCamera(){
+        navigator.mediaDevices.getUserMedia ({ audio: true, video: true }).then((myVideo) => {
+          this.myVideo = myVideo;
+          let video = document.getElementById('my-video');
+          video.srcObject = myVideo;
+          video.onloadedmetadata = (e)=>{//запускаем воспроизведение, когда объект загружен
+            video.play();
+          };
+        }).catch((err)=>{ console.log(err.name + ": " + err.message); });
+      },
+    },
+    created(){
+      this.connectMyCamera();
+    },
+  })
+
+</script>
+</body>
+</html>

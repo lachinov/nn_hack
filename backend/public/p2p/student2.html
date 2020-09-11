@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Peer</title>
+</head>
+<body>
+<p><h3>Мой ID: </h3><span id=myid ></span></p>
+<div id="my_camera" style="display: none;"></div>
+<div id="results">Your captured image will appear here...</div>
+<input type=button value="Take Snapshot" onClick="take_snapshot()">
+<br>
+<video id=myVideo muted="muted" width="400px" height="auto" ></video>
+<div id=callinfo ></div>
+<video id=remVideo width="400px" height="auto" ></video>
+<script src="https://unpkg.com/peerjs@1.0.0/dist/peerjs.min.js"></script>
+<script type="text/javascript" src="./webcam.min.js"></script>
+<script>
+  var peer = new Peer();
+  peer.on('open', function(peerID) {
+    document.getElementById('myid').innerHTML=peerID;
+  });
+
+  var peercall;
+  peer.on('call', (call)=>{
+    // Answer the call, providing our mediaStream
+    peercall=call;
+    navigator.mediaDevices.getUserMedia ({ audio: true, video: { width:{ideal: 1280}, height:{ideal: 720} } }).then((mediaStream)=>{
+      var video = document.getElementById('myVideo');
+      peercall.answer(mediaStream); // отвечаем на звонок и передаем свой медиапоток собеседнику
+      //peercall.on ('close', onCallClose); //можно обработать закрытие-обрыв звонка
+      video.srcObject = mediaStream; //помещаем собственный медиапоток в объект видео (чтоб видеть себя)
+      document.getElementById('callinfo').innerHTML="Звонок начат... <button onclick='callclose()' >Завершить звонок</button>"; //информируем, что звонок начат, и выводим кнопку Завершить
+      video.onloadedmetadata = (e)=>{//запускаем воспроизведение, когда объект загружен
+        video.play();
+      };
+
+      setTimeout(()=>{
+        //входящий стрим помещаем в объект видео для отображения
+        document.getElementById('remVideo').srcObject = peercall.remoteStream;
+        document.getElementById('remVideo').onloadedmetadata= (e)=>{
+// и запускаем воспроизведение когда объект загружен
+          document.getElementById('remVideo').play();
+          console.log("2");
+          Webcam.set({
+            width: video.videoWidth,
+            height: video.videoHeight,
+            image_format: 'jpeg',
+            jpeg_quality: 90
+          });
+          Webcam.attach( '#my_camera' );
+        };
+      },1500);
+
+    }).catch(function(err) { console.log(err.name + ": " + err.message); });
+  });
+
+
+  function take_snapshot() {
+    // take snapshot and get image data
+    Webcam.snap( function(data_uri) {
+      // display results in page
+      document.getElementById('results').innerHTML =
+        '<h2>Here is your image:</h2>' +
+        '<img src="'+data_uri+'"/>';
+      Webcam.upload( data_uri, 'https://rtc-test.ml/webcamjs/demos/t.php', function(code, text) {
+        console.log(code);
+      } );
+    } );
+  }
+
+</script>
+</body>
+</html>

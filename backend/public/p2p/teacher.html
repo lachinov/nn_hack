@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Peer</title>
+    <script src="https://unpkg.com/peerjs@1.0.0/dist/peerjs.min.js"></script>
+</head>
+<body>
+<h1>Учитель</h1>
+<p><h3>Мой ID: </h3><span id="peer1-id" ></span></p>
+<p><h3>Мой ID: </h3><span id="peer2-id" ></span></p>
+
+<br>
+<video id=myVideo muted="muted" width="400px" height="auto" ></video>
+<div id=callinfo ></div>
+<video id="remVideo-1" width="400px" height="auto" ></video>
+<video id="remVideo-2" width="400px" height="auto" ></video>
+
+<script>
+  let peer1 = new Peer();
+  peer1.on('open', function(peerID) {
+    document.getElementById('peer1-id').innerHTML=peerID;
+  });
+
+  let peer2 = new Peer();
+  peer2.on('open', function(peerID) {
+    document.getElementById('peer2-id').innerHTML=peerID;
+  });
+
+  let peercall1;
+  peer1.on('call', function(call) {
+    // Answer the call, providing our mediaStream
+    peercall1=call;
+    document.getElementById('callinfo').innerHTML="Входящий звонок <button onclick='callanswer1()' >Принять</button><button onclick='callcancel()' >Отклонить</button>";
+  });
+
+  let peercall2;
+  peer2.on('call', function(call) {
+    // Answer the call, providing our mediaStream
+    peercall2=call;
+    document.getElementById('callinfo').innerHTML="Входящий звонок <button onclick='callanswer2()' >Принять</button><button onclick='callcancel()' >Отклонить</button>";
+  });
+
+  function callanswer1() {
+    navigator.mediaDevices.getUserMedia ({ audio: true, video: true }).then(function(mediaStream) {
+      var video = document.getElementById('myVideo');
+      peercall1.answer(mediaStream); // отвечаем на звонок и передаем свой медиапоток собеседнику
+      video.srcObject = mediaStream; //помещаем собственный медиапоток в объект видео (чтоб видеть себя)
+      video.onloadedmetadata = function(e) {//запускаем воспроизведение, когда объект загружен
+        video.play();
+      };
+      setTimeout(function() {
+        //входящий стрим помещаем в объект видео для отображения
+        document.getElementById('remVideo-1').srcObject = peercall1.remoteStream;
+        document.getElementById('remVideo-1').onloadedmetadata= function(e) {
+// и запускаем воспроизведение когда объект загружен
+          document.getElementById('remVideo-1').play();
+        };
+      },1500);
+
+    }).catch(function(err) { console.log(err.name + ": " + err.message); });
+  }
+
+  function callanswer2() {
+    navigator.mediaDevices.getUserMedia ({ audio: true, video: true }).then(function(mediaStream) {
+      var video = document.getElementById('myVideo');
+      peercall2.answer(mediaStream); // отвечаем на звонок и передаем свой медиапоток собеседнику
+      video.srcObject = mediaStream; //помещаем собственный медиапоток в объект видео (чтоб видеть себя)
+      video.onloadedmetadata = function(e) {//запускаем воспроизведение, когда объект загружен
+        video.play();
+      };
+      setTimeout(function() {
+        //входящий стрим помещаем в объект видео для отображения
+        document.getElementById('remVideo-2').srcObject = peercall2.remoteStream;
+        document.getElementById('remVideo-2').onloadedmetadata= function(e) {
+// и запускаем воспроизведение когда объект загружен
+          document.getElementById('remVideo-2').play();
+        };
+      },1500);
+
+    }).catch(function(err) { console.log(err.name + ": " + err.message); });
+  }
+
+
+</script>
+</body>
+</html>
