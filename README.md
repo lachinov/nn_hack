@@ -1,78 +1,10 @@
-# nn_hack
 
-Репозиторий ПО для прокторинга экзаменов
+![](docs/title_image.jpg)
 
-Вебсервис получает POST запрос вида:
-
+Репозиторий вебсервиса FILLIN_AI для прокторинга экзаменов.
 
 
-
-
-
-
-## Докеры
-
-
-Запустить докер с вебсервисом, чтобы он ловил POST запросы снаружи на 5000 порт (OpenVINO с моделями уже упакованы внутрь):
-
-```bash
-docker run -it fenixfly/vinoserver -p 5000:8080
-```
-
-Запустить его в виде демона: 
-
-```bash
-docker run -d fenixfly/vinoserver -p 5000:8080
-```
-
-
-### Докер с OpenVINO - fenixfly/vinodock
-
-Сборка: положить архив с OpenVINO `l_openvino_toolkit_p_2020.4.287.tgz` в папку `docker/openvino` и запустить сборку
- 
-
-```bash
-docker build -t fenixfly/vinodock -f dockers/openvino/Dockerfile dockers/openvino 
-```
-
-Запуск (на всякий случай)
-
-```bash
-docker run -it fenixfly/vinodock bash
-```
-
-### Докер с PyTorch, onnxruntime-gpu и OpenVINO - vinotorch
-
-Сборка:
- 
-```bash
-docker build -t fenixfly/torchvino -f dockers/pytorch/Dockerfile . 
-```
-
-Либо скачать собранный:
-
-```bash
-docker pull fenixfly/torchvino:latest
-```
-
-Запуск:
-
-```bash
-docker run -it fenixfly/torchvino bash
-```
-
-### Докер с вебсервисом - fenixfly/vinoserver
-
-Сборка:
- 
-```bash
-docker build -t fenixfly/vinoserver -f dockers/webserver/Dockerfile . 
-```
-
-Запуск:
-
-```bash
-docker run -it fenixfly/vinoserver -p 5000:8080  
-```
-
-
+Разработчики:
+- Дмитрий Лачинов
+- Вячеслав Савченков
+- Евгений Васильев
