@@ -41,7 +41,27 @@ docker build -t fenixfly/vinodock -f dockers/openvino/Dockerfile dockers/openvin
 docker run -it fenixfly/vinodock bash
 ```
 
-### Докер с вебсервисом - fenixfly/vinodock
+### Докер с PyTorch, onnxruntime-gpu и OpenVINO - vinotorch
+
+Сборка:
+ 
+```bash
+docker build -t fenixfly/torchvino -f dockers/pytorch/Dockerfile . 
+```
+
+Либо скачать собранный:
+
+```bash
+docker pull fenixfly/torchvino:latest
+```
+
+Запуск:
+
+```bash
+docker run -it fenixfly/torchvino bash
+```
+
+### Докер с вебсервисом - fenixfly/vinoserver
 
 Сборка:
  
