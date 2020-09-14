@@ -9,7 +9,7 @@
 
 Разработчики:
 - [Дмитрий Лачинов](mailto:dlachinov@gmail.com?subject=HackNN%20Demo)
-- [Вячеслав Савченков](mailto:slava554@mail.ru??subject=HackNN%20Demo)
+- [Вячеслав Савченков](mailto:slava554@mail.ru?subject=HackNN%20Demo)
 - [Евгений Васильев](mailto:eugene.unn@gmail.com?subject=HackNN%20Demo)
 
 Для получения демо-версии обращайтесь по указанным выше контактам.
