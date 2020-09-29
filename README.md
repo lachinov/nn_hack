@@ -4,7 +4,7 @@
 Репозиторий вебсервиса FILLIN_AI для прокторинга экзаменов.
 
 Демо:
-[Скачать видео демо](https://dropmefiles.com/8LrVy)
+[Демо](https://www.youtube.com/watch?v=DpA92h74W3E)
 
 
 Разработчики:
